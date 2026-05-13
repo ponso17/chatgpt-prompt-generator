@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PromptCraft — ChatGPT Prompt Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #111118;
+    --bg3: #1a1a24;
+    --surface: #16161f;
+    --surface2: #1e1e2c;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --accent: #7c6af7;
+    --accent2: #a992ff;
+    --accent-glow: rgba(124,106,247,0.25);
+    --teal: #2dd4bf;
+    --amber: #f59e0b;
+    --coral: #f87171;
+    --green: #4ade80;
+    --text: #f0effe;
+    --text2: #a09db8;
+    --text3: #6b6885;
+    --radius: 14px;
+    --radius-sm: 8px;
+    --font-display: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+    font-size: 15px;
+  }
+
+  /* ─── BACKGROUND GRID ─── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(124,106,247,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,106,247,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { max-width: 920px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 1; }
+
+  /* ─── HEADER ─── */
+  header {
+    padding: 48px 0 32px;
+    text-align: center;
+  }
+  .logo-chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 100px; padding: 6px 16px 6px 10px;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.08em;
+    color: var(--accent2); text-transform: uppercase; margin-bottom: 20px;
+  }
+  .logo-chip span.dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent); display: block;
+    box-shadow: 0 0 8px var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(0.85)} }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: clamp(36px, 6vw, 58px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, var(--accent2) 50%, var(--teal) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 14px;
+  }
+  .subtitle {
+    color: var(--text2); font-size: 16px; font-weight: 300;
+    max-width: 520px; margin: 0 auto 32px;
+  }
+
+  /* ─── CATEGORY TABS ─── */
+  .category-bar {
+    display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+    margin-bottom: 36px;
+  }
+  .cat-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 100px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text2); font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all 0.18s ease;
+    font-family: var(--font-body);
+  }
+  .cat-btn:hover { border-color: var(--border2); color: var(--text); }
+  .cat-btn.active {
+    background: var(--accent); border-color: var(--accent);
+    color: #fff;
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+  .cat-btn .cat-icon { font-size: 15px; line-height: 1; }
+
+  /* ─── MAIN CARD ─── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .card-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .card-header h2 {
+    font-family: var(--font-display); font-size: 16px; font-weight: 700;
+    color: var(--text);
+  }
+  .step-num {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; flex-shrink: 0;
+  }
+  .card-body { padding: 20px 24px; }
+
+  /* ─── FORM ELEMENTS ─── */
+  .field-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  }
+  .field-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+  .field-grid.full { grid-template-columns: 1fr; }
+  @media(max-width: 600px) {
+    .field-grid, .field-grid.three { grid-template-columns: 1fr; }
+  }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label {
+    font-size: 12px; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--text3);
+  }
+  .field label .req { color: var(--accent); margin-left: 2px; }
+
+  input[type=text], textarea, select {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    padding: 10px 14px;
+    width: 100%;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    outline: none;
+    -webkit-appearance: none;
+  }
+  input[type=text]:focus, textarea:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  input[type=text]::placeholder, textarea::placeholder { color: var(--text3); }
+  textarea { resize: vertical; min-height: 72px; }
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b6885' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center;
+    padding-right: 36px; cursor: pointer;
+  }
+  select option { background: var(--bg3); }
+
+  /* ─── CHIP SELECTOR (tone/format) ─── */
+  .chip-group { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    padding: 5px 12px; border-radius: 100px;
+    border: 1px solid var(--border);
+    background: var(--bg3); color: var(--text2);
+    font-size: 13px; cursor: pointer; transition: all 0.15s;
+    user-select: none;
+  }
+  .chip:hover { border-color: var(--border2); color: var(--text); }
+  .chip.selected {
+    background: rgba(124,106,247,0.15);
+    border-color: var(--accent);
+    color: var(--accent2);
+  }
+
+  /* ─── ADVANCED TOGGLE ─── */
+  .advanced-toggle {
+    display: flex; align-items: center; gap: 8px;
+    color: var(--accent2); font-size: 13px; font-weight: 500;
+    cursor: pointer; padding: 12px 0 4px; width: fit-content;
+    user-select: none;
+  }
+  .advanced-toggle svg { transition: transform 0.2s; }
+  .advanced-toggle.open svg { transform: rotate(180deg); }
+  .advanced-section { display: none; padding-top: 16px; }
+  .advanced-section.visible { display: block; }
+
+  /* ─── GENERATE BUTTON ─── */
+  .btn-generate {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; padding: 16px;
+    background: var(--accent);
+    border: none; border-radius: var(--radius);
+    color: #fff; font-size: 16px; font-weight: 700;
+    font-family: var(--font-display);
+    letter-spacing: 0.02em;
+    cursor: pointer; transition: all 0.2s;
+    box-shadow: 0 4px 24px var(--accent-glow);
+    margin-top: 8px;
+  }
+  .btn-generate:hover {
+    background: var(--accent2);
+    box-shadow: 0 6px 32px rgba(169,146,255,0.35);
+    transform: translateY(-1px);
+  }
+  .btn-generate:active { transform: translateY(0); }
+  .btn-generate svg { flex-shrink: 0; }
+
+  /* ─── OUTPUT ─── */
+  .output-section { display: none; }
+  .output-section.visible { display: block; }
+
+  .output-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px; overflow: hidden;
+  }
+  .output-top {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    gap: 12px; flex-wrap: wrap;
+  }
+  .output-top h3 {
+    font-family: var(--font-display); font-size: 14px; font-weight: 700;
+    color: var(--text2);
+  }
+  .output-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .btn-sm {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: var(--surface2); color: var(--text2);
+    font-size: 13px; font-weight: 500;
+    font-family: var(--font-body);
+    cursor: pointer; transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn-sm:hover { color: var(--text); border-color: var(--accent); }
+  .btn-sm.copied { border-color: var(--green); color: var(--green); }
+
+  .prompt-output {
+    padding: 20px;
+    font-size: 14px; line-height: 1.75; color: var(--text);
+    white-space: pre-wrap; word-break: break-word;
+    min-height: 120px;
+  }
+  .prompt-output .label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--accent2);
+    display: block; margin-bottom: 2px; margin-top: 12px;
+  }
+  .prompt-output .label:first-child { margin-top: 0; }
+  .prompt-output .value { color: var(--text); display: block; margin-bottom: 4px; }
+
+  /* ─── QUALITY SCORE ─── */
+  .quality-bar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--bg3);
+    font-size: 13px;
+  }
+  .quality-label { color: var(--text3); font-weight: 500; }
+  .quality-track {
+    flex: 1; height: 5px; background: var(--bg);
+    border-radius: 100px; overflow: hidden;
+  }
+  .quality-fill {
+    height: 100%; border-radius: 100px;
+    background: linear-gradient(90deg, var(--amber), var(--teal));
+    transition: width 0.6s cubic-bezier(.22,1,.36,1);
+    width: 0%;
+  }
+  .quality-pct { font-weight: 700; color: var(--teal); min-width: 34px; }
+
+  /* ─── TEMPLATES ─── */
+  .templates-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+  }
+  .tpl-card {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px;
+    cursor: pointer; transition: all 0.18s;
+  }
+  .tpl-card:hover {
+    border-color: var(--accent); background: rgba(124,106,247,0.06);
+    transform: translateY(-2px);
+  }
+  .tpl-icon { font-size: 22px; margin-bottom: 8px; display: block; }
+  .tpl-name {
+    font-weight: 600; font-size: 13px; color: var(--text);
+    margin-bottom: 4px;
+  }
+  .tpl-desc { font-size: 12px; color: var(--text3); line-height: 1.5; }
+
+  /* ─── HISTORY ─── */
+  .history-section { margin-top: 24px; }
+  .history-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg3); margin-bottom: 8px;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .history-item:hover { border-color: var(--border2); }
+  .history-item-text {
+    flex: 1; font-size: 13px; color: var(--text2);
+    overflow: hidden; text-overflow: ellipsis;
+    display: -webkit-box; -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical; line-height: 1.5;
+  }
+  .history-item-time { font-size: 11px; color: var(--text3); white-space: nowrap; margin-top: 2px; }
+  .history-clear {
+    font-size: 12px; color: var(--text3); cursor: pointer;
+    text-decoration: underline; margin-top: 8px; display: inline-block;
+  }
+  .history-clear:hover { color: var(--coral); }
+
+  /* ─── TAGS ─── */
+  .tag {
+    display: inline-block; padding: 3px 9px; border-radius: 100px;
+    font-size: 11px; font-weight: 600;
+    background: rgba(45,212,191,0.12); color: var(--teal);
+    border: 1px solid rgba(45,212,191,0.2);
+    margin-right: 4px; margin-bottom: 4px;
+  }
+
+  /* ─── DIVIDER ─── */
+  .divider {
+    border: none; border-top: 1px solid var(--border);
+    margin: 28px 0;
+  }
+
+  /* ─── FOOTER ─── */
+  footer {
+    text-align: center; padding: 40px 20px;
+    color: var(--text3); font-size: 13px;
+  }
+  footer strong { color: var(--text2); }
+
+  /* ─── TOAST ─── */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: var(--green); color: #051a0b;
+    padding: 10px 24px; border-radius: 100px;
+    font-weight: 600; font-size: 14px;
+    z-index: 100; transition: transform 0.3s cubic-bezier(.22,1,.36,1);
+    pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ─── WORD COUNT BADGE ─── */
+  .wc-badge {
+    font-size: 11px; color: var(--text3); float: right;
+    margin-top: 2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo-chip"><span class="dot"></span> ChatGPT Prompt Generator</div>
+    <h1>PromptCraft</h1>
+    <p class="subtitle">Build high-quality structured prompts using the Role → Context → Task → Format → Constraints framework used by top AI creators.</p>
+
+    <!-- CATEGORY TABS -->
+    <div class="category-bar" id="categoryBar">
+      <button class="cat-btn active" data-cat="all"><span class="cat-icon">⚡</span> All</button>
+      <button class="cat-btn" data-cat="content"><span class="cat-icon">✍️</span> Content</button>
+      <button class="cat-btn" data-cat="business"><span class="cat-icon">💼</span> Business</button>
+      <button class="cat-btn" data-cat="coding"><span class="cat-icon">💻</span> Coding</button>
+      <button class="cat-btn" data-cat="education"><span class="cat-icon">🎓</span> Education</button>
+      <button class="cat-btn" data-cat="creative"><span class="cat-icon">🎨</span> Creative</button>
+      <button class="cat-btn" data-cat="seo"><span class="cat-icon">📈</span> SEO & Marketing</button>
+      <button class="cat-btn" data-cat="youtube"><span class="cat-icon">🎬</span> YouTube</button>
+    </div>
+  </header>
+
+  <!-- TEMPLATES -->
+  <div class="card" id="templatesCard">
+    <div class="card-header">
+      <div class="step-num">✦</div>
+      <h2>Quick Templates</h2>
+    </div>
+    <div class="card-body">
+      <div class="templates-grid" id="templatesGrid"></div>
+    </div>
+  </div>
+
+  <!-- STEP 1: ROLE + TASK -->
+  <div class="card">
+    <div class="card-header">
+      <div class="step-num">1</div>
+      <h2>Role & Task</h2>
+    </div>
+    <div class="card-body">
+      <div class="field-grid" style="margin-bottom:16px">
+        <div class="field">
+          <label>AI Role / Persona <span class="req">*</span></label>
+          <input type="text" id="role" placeholder="e.g. Senior Content Strategist, Python Expert...">
+        </div>
+        <div class="field">
+          <label>Task / Action <span class="req">*</span></label>
+          <select id="taskAction">
+            <option value="">— Select action —</option>
+            <optgroup label="Writing">
+              <option>Write</option><option>Rewrite</option><option>Edit</option>
+              <option>Draft</option><option>Summarize</option><option>Expand</option>
+            </optgroup>
+            <optgroup label="Analysis">
+              <option>Analyze</option><option>Compare</option><option>Evaluate</option>
+              <option>Research</option><option>Audit</option>
+            </optgroup>
+            <optgroup label="Generation">
+              <option>Brainstorm</option><option>Generate</option><option>Create</option>
+              <option>Design</option><option>Plan</option><option>Outline</option>
+            </optgroup>
+            <optgroup label="Other">
+              <option>Explain</option><option>Teach</option><option>Translate</option>
+              <option>Debug</option><option>Optimize</option><option>Roleplay</option>
+            </optgroup>
+          </select>
+        </div>
+      </div>
+      <div class="field field-grid full">
+        <label>Topic / Subject <span class="req">*</span> <span class="wc-badge" id="topicWC">0 words</span></label>
+        <textarea id="topic" placeholder="Describe what you want the AI to work on. Be as specific as possible..." rows="3"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: CONTEXT -->
+  <div class="card">
+    <div class="card-header">
+      <div class="step-num">2</div>
+      <h2>Context & Audience</h2>
+    </div>
+    <div class="card-body">
+      <div class="field-grid" style="margin-bottom:16px">
+        <div class="field">
+          <label>Target Audience</label>
+          <input type="text" id="audience" placeholder="e.g. Beginner marketers, Tech CTOs...">
+        </div>
+        <div class="field">
+          <label>Audience Level</label>
+          <select id="level">
+            <option value="">— Any level —</option>
+            <option>Beginner</option>
+            <option>Intermediate</option>
+            <option>Advanced</option>
+            <option>Expert</option>
+          </select>
+        </div>
+      </div>
+      <div class="field field-grid full">
+        <label>Background Context</label>
+        <textarea id="context" placeholder="Any relevant background info, constraints, or situation the AI should know about..." rows="2"></textarea>
+      </div>
+      <div class="field" style="margin-top:16px">
+        <label>Industry / Niche</label>
+        <select id="industry">
+          <option value="">— Select industry —</option>
+          <option>Technology & Software</option><option>Marketing & Advertising</option>
+          <option>E-commerce & Retail</option><option>Finance & Investing</option>
+          <option>Healthcare & Wellness</option><option>Education & Training</option>
+          <option>Real Estate</option><option>Content Creation & Media</option>
+          <option>Consulting & Coaching</option><option>Legal & Compliance</option>
+          <option>Travel & Hospitality</option><option>Gaming & Entertainment</option>
+          <option>Food & Beverage</option><option>Non-profit & Social Impact</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3: OUTPUT FORMAT -->
+  <div class="card">
+    <div class="card-header">
+      <div class="step-num">3</div>
+      <h2>Tone & Format</h2>
+    </div>
+    <div class="card-body">
+      <div class="field" style="margin-bottom:16px">
+        <label>Tone of Voice</label>
+        <div class="chip-group" id="toneGroup">
+          <div class="chip" data-val="Professional">Professional</div>
+          <div class="chip" data-val="Casual & Friendly">Casual</div>
+          <div class="chip" data-val="Authoritative">Authoritative</div>
+          <div class="chip" data-val="Empathetic">Empathetic</div>
+          <div class="chip" data-val="Witty & Humorous">Witty</div>
+          <div class="chip" data-val="Inspirational">Inspirational</div>
+          <div class="chip" data-val="Direct & Concise">Direct</div>
+          <div class="chip" data-val="Conversational">Conversational</div>
+          <div class="chip" data-val="Academic">Academic</div>
+          <div class="chip" data-val="Persuasive">Persuasive</div>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:16px">
+        <label>Output Format</label>
+        <div class="chip-group" id="formatGroup">
+          <div class="chip" data-val="Numbered list">Numbered list</div>
+          <div class="chip" data-val="Bullet points">Bullet points</div>
+          <div class="chip" data-val="Paragraph prose">Paragraphs</div>
+          <div class="chip" data-val="Step-by-step guide">Step-by-step</div>
+          <div class="chip" data-val="Markdown with headers">Markdown</div>
+          <div class="chip" data-val="Table / comparison">Table</div>
+          <div class="chip" data-val="JSON object">JSON</div>
+          <div class="chip" data-val="Script / dialogue">Script</div>
+          <div class="chip" data-val="Email format">Email</div>
+          <div class="chip" data-val="Code with comments">Code</div>
+        </div>
+      </div>
+      <div class="field-grid three">
+        <div class="field">
+          <label>Output Length</label>
+          <select id="length">
+            <option value="">— Any —</option>
+            <option>Very short (1-2 sentences)</option>
+            <option>Short (1 paragraph)</option>
+            <option>Medium (300-500 words)</option>
+            <option>Long (500-1000 words)</option>
+            <option>Very long (1000+ words)</option>
+            <option>Custom word count</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Language</label>
+          <select id="language">
+            <option value="">English (default)</option>
+            <option>Filipino / Tagalog</option>
+            <option>Spanish</option>
+            <option>French</option>
+            <option>German</option>
+            <option>Japanese</option>
+            <option>Chinese (Simplified)</option>
+            <option>Portuguese</option>
+            <option>Arabic</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Number of Variations</label>
+          <select id="variations">
+            <option value="1">1 version</option>
+            <option value="2">2 versions</option>
+            <option value="3">3 versions</option>
+            <option value="5">5 versions</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4: ADVANCED (collapsible) -->
+  <div class="card">
+    <div class="card-header">
+      <div class="step-num">4</div>
+      <h2>Constraints & Advanced Options</h2>
+    </div>
+    <div class="card-body">
+      <div class="field-grid" style="margin-bottom:16px">
+        <div class="field">
+          <label>Include (must haves)</label>
+          <input type="text" id="mustInclude" placeholder="e.g. CTA, statistics, examples...">
+        </div>
+        <div class="field">
+          <label>Exclude (avoid these)</label>
+          <input type="text" id="mustExclude" placeholder="e.g. jargon, passive voice, emojis...">
+        </div>
+      </div>
+
+      <div class="advanced-toggle" id="advancedToggle">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M4 6l4 4 4-4"/>
+        </svg>
+        Show more options
+      </div>
+
+      <div class="advanced-section" id="advancedSection">
+        <div class="field-grid" style="margin-bottom:16px">
+          <div class="field">
+            <label>Prompt Framework</label>
+            <select id="framework">
+              <option value="auto">Auto (recommended)</option>
+              <option value="RCTF">RCTF — Role, Context, Task, Format</option>
+              <option value="RISEN">RISEN — Role, Instructions, Steps, End goal, Narrowing</option>
+              <option value="CRAFT">CRAFT — Context, Role, Action, Format, Tone</option>
+              <option value="RACE">RACE — Role, Action, Context, Execute</option>
+              <option value="APE">APE — Action, Purpose, Expectation</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Expertise Years</label>
+            <select id="experience">
+              <option value="">Not specified</option>
+              <option value="1-2 years">1-2 years</option>
+              <option value="5 years">5 years</option>
+              <option value="10 years">10 years</option>
+              <option value="15+ years">15+ years</option>
+              <option value="20+ years">20+ years</option>
+            </select>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:16px">
+          <label>Custom Example or Sample Style</label>
+          <textarea id="example" placeholder="Paste an example of the writing/output style you want the AI to emulate..." rows="2"></textarea>
+        </div>
+        <div class="field">
+          <label>Self-Check Instruction</label>
+          <div class="chip-group" id="selfCheckGroup">
+            <div class="chip" data-val="Review for accuracy before responding">Fact-check</div>
+            <div class="chip" data-val="Ask clarifying questions if anything is unclear">Ask if unclear</div>
+            <div class="chip" data-val="Proofread for grammar and tone">Proofread</div>
+            <div class="chip" data-val="Verify all output matches the format requested">Format verify</div>
+            <div class="chip" data-val="Add a brief explanation of your reasoning">Show reasoning</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GENERATE -->
+  <button class="btn-generate" id="generateBtn" onclick="generatePrompt()">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M10 2l2.5 5 5.5.8-4 3.9.9 5.5L10 14.5l-4.9 2.7.9-5.5L2 7.8l5.5-.8L10 2z"/>
+    </svg>
+    Generate Prompt
+  </button>
+
+  <!-- OUTPUT -->
+  <div class="output-section" id="outputSection" style="margin-top:20px">
+    <div class="output-card">
+      <div class="output-top">
+        <h3>✦ Generated Prompt</h3>
+        <div class="output-actions">
+          <button class="btn-sm" id="copyBtn" onclick="copyPrompt()">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="5" y="5" width="9" height="9" rx="2"/><path d="M3 11V3a2 2 0 012-2h8"/>
+            </svg>
+            Copy
+          </button>
+          <button class="btn-sm" onclick="openInChatGPT()">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M7 3H3a1 1 0 00-1 1v9a1 1 0 001 1h9a1 1 0 001-1V9M10 2h4m0 0v4m0-4L8 8"/>
+            </svg>
+            Open in ChatGPT
+          </button>
+          <button class="btn-sm" onclick="downloadPrompt()">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M8 2v8m0 0l-3-3m3 3l3-3M2 12v1a1 1 0 001 1h10a1 1 0 001-1v-1"/>
+            </svg>
+            Save .txt
+          </button>
+          <button class="btn-sm" onclick="regenerate()">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M14 8A6 6 0 114 3.6M14 2v4h-4"/>
+            </svg>
+            Redo
+          </button>
+        </div>
+      </div>
+      <div class="prompt-output" id="promptOutput"></div>
+      <div class="quality-bar">
+        <span class="quality-label">Prompt quality</span>
+        <div class="quality-track"><div class="quality-fill" id="qualityFill"></div></div>
+        <span class="quality-pct" id="qualityPct">0%</span>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="history-section" id="historySection" style="display:none">
+      <hr class="divider">
+      <div class="card-header" style="padding:0 0 12px">
+        <div class="step-num">🕑</div>
+        <h2>Recent Prompts</h2>
+      </div>
+      <div id="historyList"></div>
+      <span class="history-clear" onclick="clearHistory()">Clear history</span>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast">Copied to clipboard!</div>
+
+<footer>
+  <strong>PromptCraft</strong> — Built for creators, marketers &amp; developers.<br>
+  <span>Framework: RCTF · RISEN · CRAFT · RACE · APE</span>
+</footer>
+
+<script>
+const TEMPLATES = [
+  { icon:"🎬", name:"YouTube Script", cat:"youtube", role:"Professional YouTube scriptwriter", action:"Write", topic:"an engaging script for a YouTube video", tone:"Conversational", format:"Script / dialogue", include:"hook in first 15 seconds, CTA at end, timestamps" },
+  { icon:"📧", name:"Cold Email", cat:"business", role:"Expert email copywriter", action:"Write", topic:"a cold outreach email to a potential B2B client", tone:"Professional", format:"Email format", include:"subject line, personalization, clear CTA" },
+  { icon:"📝", name:"Blog Post", cat:"content", role:"Senior SEO content strategist", action:"Write", topic:"a comprehensive blog post with SEO optimization", tone:"Authoritative", format:"Markdown with headers", include:"H2 headers, internal links, meta description" },
+  { icon:"💡", name:"Startup Pitch", cat:"business", role:"Startup advisor and pitch coach", action:"Create", topic:"a compelling investor pitch for a startup idea", tone:"Persuasive", format:"Numbered list", include:"problem, solution, market size, traction" },
+  { icon:"🎓", name:"Lesson Plan", cat:"education", role:"Experienced curriculum designer", action:"Design", topic:"a complete lesson plan for a one-hour class", tone:"Academic", format:"Step-by-step guide", include:"learning objectives, activities, assessment" },
+  { icon:"🐍", name:"Python Code", cat:"coding", role:"Senior Python developer", action:"Write", topic:"clean, well-commented Python code to solve", tone:"Direct & Concise", format:"Code with comments", include:"error handling, docstrings, type hints" },
+  { icon:"📈", name:"SEO Strategy", cat:"seo", role:"Head of SEO with 10 years experience", action:"Create", topic:"a comprehensive SEO strategy for a new website", tone:"Professional", format:"Numbered list", include:"keyword research, on-page, backlinks, timeline" },
+  { icon:"🎨", name:"Ad Copy", cat:"content", role:"Award-winning direct-response copywriter", action:"Write", topic:"high-converting ad copy for a product launch", tone:"Persuasive", format:"Bullet points", include:"headline, subheadline, benefits, CTA" },
+  { icon:"🎬", name:"Video Title Ideas", cat:"youtube", role:"YouTube growth strategist", action:"Brainstorm", topic:"viral YouTube video titles for a niche topic", tone:"Witty & Humorous", format:"Numbered list", include:"curiosity gap, numbers, power words" },
+  { icon:"🔍", name:"Competitor Analysis", cat:"business", role:"Market research analyst", action:"Analyze", topic:"competitor strengths, weaknesses, and opportunities", tone:"Authoritative", format:"Table / comparison", include:"pricing, features, positioning, gaps" },
+  { icon:"🌱", name:"Social Post", cat:"seo", role:"Social media manager", action:"Write", topic:"a week of social media posts for a brand", tone:"Casual & Friendly", format:"Numbered list", include:"hashtags, emojis, platform-specific formatting" },
+  { icon:"📖", name:"Short Story", cat:"creative", role:"Published fiction author", action:"Write", topic:"an engaging short story with a surprising twist", tone:"Inspirational", format:"Paragraph prose", include:"vivid sensory details, dialogue, emotional arc" },
+];
+
+let history = JSON.parse(localStorage.getItem('promptHistory') || '[]');
+let selectedTone = '';
+let selectedFormat = '';
+let selectedSelfCheck = '';
+let currentPrompt = '';
+let activeCategory = 'all';
+
+function initChips() {
+  ['toneGroup','formatGroup','selfCheckGroup'].forEach(gId => {
+    document.getElementById(gId).querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const isMulti = gId === 'selfCheckGroup';
+        if (!isMulti) {
+          chip.parentElement.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+        }
+        chip.classList.toggle('selected');
+        if (gId === 'toneGroup') selectedTone = chip.classList.contains('selected') ? chip.dataset.val : '';
+        if (gId === 'formatGroup') selectedFormat = chip.classList.contains('selected') ? chip.dataset.val : '';
+        if (gId === 'selfCheckGroup') selectedSelfCheck = [...document.querySelectorAll('#selfCheckGroup .chip.selected')].map(c=>c.dataset.val).join('. ');
+      });
+    });
+  });
+}
+
+function initCategoryBar() {
+  document.getElementById('categoryBar').querySelectorAll('.cat-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeCategory = btn.dataset.cat;
+      renderTemplates();
+    });
+  });
+}
+
+function renderTemplates() {
+  const filtered = activeCategory === 'all' ? TEMPLATES : TEMPLATES.filter(t => t.cat === activeCategory);
+  const grid = document.getElementById('templatesGrid');
+  grid.innerHTML = filtered.map((t, i) => `
+    <div class="tpl-card" onclick="loadTemplate(${TEMPLATES.indexOf(t)})">
+      <span class="tpl-icon">${t.icon}</span>
+      <div class="tpl-name">${t.name}</div>
+      <div class="tpl-desc">${t.role}</div>
+    </div>
+  `).join('');
+}
+
+function loadTemplate(i) {
+  const t = TEMPLATES[i];
+  document.getElementById('role').value = t.role;
+  document.getElementById('taskAction').value = t.action;
+  document.getElementById('topic').value = t.topic || '';
+  if (t.include) document.getElementById('mustInclude').value = t.include;
+  document.querySelectorAll('#toneGroup .chip').forEach(c => {
+    c.classList.toggle('selected', c.dataset.val === t.tone);
+  });
+  selectedTone = t.tone;
+  document.querySelectorAll('#formatGroup .chip').forEach(c => {
+    c.classList.toggle('selected', c.dataset.val === t.format);
+  });
+  selectedFormat = t.format;
+  updateWordCount();
+  window.scrollTo({ top: document.querySelector('.card').offsetTop - 20, behavior: 'smooth' });
+}
+
+function updateWordCount() {
+  const topic = document.getElementById('topic').value.trim();
+  const words = topic ? topic.split(/\s+/).length : 0;
+  document.getElementById('topicWC').textContent = words + ' word' + (words !== 1 ? 's' : '');
+}
+document.getElementById('topic').addEventListener('input', updateWordCount);
+
+function calcQuality() {
+  let score = 0;
+  const fields = { role: 20, topic: 20, taskAction: 10, audience: 10, context: 10 };
+  for (const [id, pts] of Object.entries(fields)) {
+    if (document.getElementById(id).value.trim()) score += pts;
+  }
+  if (selectedTone) score += 10;
+  if (selectedFormat) score += 10;
+  if (document.getElementById('mustInclude').value.trim()) score += 5;
+  if (document.getElementById('mustExclude').value.trim()) score += 5;
+  return Math.min(score, 100);
+}
+
+function buildPrompt() {
+  const role = document.getElementById('role').value.trim();
+  const task = document.getElementById('taskAction').value;
+  const topic = document.getElementById('topic').value.trim();
+  const audience = document.getElementById('audience').value.trim();
+  const level = document.getElementById('level').value;
+  const context = document.getElementById('context').value.trim();
+  const industry = document.getElementById('industry').value;
+  const tone = selectedTone;
+  const format = selectedFormat;
+  const length = document.getElementById('length').value;
+  const lang = document.getElementById('language').value;
+  const variations = document.getElementById('variations').value;
+  const include = document.getElementById('mustInclude').value.trim();
+  const exclude = document.getElementById('mustExclude').value.trim();
+  const framework = document.getElementById('framework').value;
+  const exp = document.getElementById('experience').value;
+  const example = document.getElementById('example').value.trim();
+  const selfCheck = selectedSelfCheck;
+
+  if (!role || !topic) return null;
+
+  let lines = [];
+
+  // ROLE
+  let roleStr = `You are a ${role}`;
+  if (exp) roleStr += ` with ${exp} of experience`;
+  if (industry) roleStr += `, specializing in the ${industry} industry`;
+  roleStr += '.';
+  lines.push(roleStr);
+  lines.push('');
+
+  // CONTEXT
+  if (context || audience || level) {
+    let ctx = '';
+    if (context) ctx += context + ' ';
+    if (audience) ctx += `The intended audience is ${audience}${level ? ` at a ${level} level` : ''}.`;
+    if (ctx.trim()) { lines.push(ctx.trim()); lines.push(''); }
+  }
+
+  // TASK
+  let taskLine = `${task || 'Create'} ${topic}.`;
+  if (variations > 1) taskLine += ` Provide ${variations} distinct variations.`;
+  if (lang) taskLine += ` Respond in ${lang}.`;
+  lines.push(taskLine);
+  lines.push('');
+
+  // FORMAT
+  if (format || length || tone) {
+    lines.push('Output requirements:');
+    if (tone) lines.push(`- Tone: ${tone}`);
+    if (format) lines.push(`- Format: ${format}`);
+    if (length) lines.push(`- Length: ${length}`);
+    lines.push('');
+  }
+
+  // CONSTRAINTS
+  const constraints = [];
+  if (include) constraints.push(`Must include: ${include}`);
+  if (exclude) constraints.push(`Do NOT include: ${exclude}`);
+  if (constraints.length) {
+    lines.push('Constraints:');
+    constraints.forEach(c => lines.push(`- ${c}`));
+    lines.push('');
+  }
+
+  // EXAMPLE
+  if (example) {
+    lines.push(`Style reference / example:`);
+    lines.push(`"""${example}"""`);
+    lines.push('Match the style and quality demonstrated above.');
+    lines.push('');
+  }
+
+  // SELF-CHECK
+  if (selfCheck) {
+    lines.push(`Before finalizing your response: ${selfCheck}.`);
+  }
+
+  return lines.join('\n').trim();
+}
+
+function generatePrompt() {
+  const prompt = buildPrompt();
+  if (!prompt) {
+    showToast('Please fill in Role and Topic at minimum!', '#f87171');
+    return;
+  }
+
+  currentPrompt = prompt;
+  const output = document.getElementById('promptOutput');
+
+  // Formatted display
+  output.innerHTML = prompt
+    .split('\n')
+    .map(line => {
+      if (!line.trim()) return '<br>';
+      return `<span style="display:block">${escapeHTML(line)}</span>`;
+    })
+    .join('');
+
+  // Quality bar
+  const q = calcQuality();
+  setTimeout(() => {
+    document.getElementById('qualityFill').style.width = q + '%';
+    document.getElementById('qualityPct').textContent = q + '%';
+    document.getElementById('qualityPct').style.color = q >= 70 ? 'var(--teal)' : q >= 40 ? 'var(--amber)' : 'var(--coral)';
+  }, 100);
+
+  // Show output
+  document.getElementById('outputSection').classList.add('visible');
+  document.getElementById('outputSection').style.display = 'block';
+  document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // Save to history
+  saveHistory(prompt);
+}
+
+function escapeHTML(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function copyPrompt() {
+  navigator.clipboard.writeText(currentPrompt).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.classList.add('copied');
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-7"/></svg> Copied!`;
+    showToast('Prompt copied!');
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="5" width="9" height="9" rx="2"/><path d="M3 11V3a2 2 0 012-2h8"/></svg> Copy`;
+    }, 2000);
+  });
+}
+
+function openInChatGPT() {
+  const encoded = encodeURIComponent(currentPrompt);
+  window.open(`https://chatgpt.com/?q=${encoded}`, '_blank');
+}
+
+function downloadPrompt() {
+  const blob = new Blob([currentPrompt], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'promptcraft-' + Date.now() + '.txt';
+  a.click();
+}
+
+function regenerate() {
+  generatePrompt();
+}
+
+function saveHistory(prompt) {
+  const entry = { prompt, time: new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }), date: new Date().toLocaleDateString() };
+  history.unshift(entry);
+  if (history.length > 10) history = history.slice(0, 10);
+  localStorage.setItem('promptHistory', JSON.stringify(history));
+  renderHistory();
+}
+
+function renderHistory() {
+  if (!history.length) { document.getElementById('historySection').style.display = 'none'; return; }
+  document.getElementById('historySection').style.display = 'block';
+  document.getElementById('historyList').innerHTML = history.map((h, i) => `
+    <div class="history-item" onclick="loadHistoryItem(${i})">
+      <div class="history-item-text">${escapeHTML(h.prompt.substring(0, 160))}...</div>
+      <div class="history-item-time">${h.time}</div>
+    </div>
+  `).join('');
+}
+
+function loadHistoryItem(i) {
+  currentPrompt = history[i].prompt;
+  const output = document.getElementById('promptOutput');
+  output.innerHTML = currentPrompt.split('\n').map(l => l ? `<span style="display:block">${escapeHTML(l)}</span>` : '<br>').join('');
+  document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+function clearHistory() {
+  history = [];
+  localStorage.removeItem('promptHistory');
+  document.getElementById('historySection').style.display = 'none';
+}
+
+function showToast(msg, color) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  if (color) t.style.background = color;
+  else t.style.background = 'var(--green)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// Advanced toggle
+document.getElementById('advancedToggle').addEventListener('click', function() {
+  this.classList.toggle('open');
+  const sec = document.getElementById('advancedSection');
+  sec.classList.toggle('visible');
+  this.querySelector('svg').style.transform = sec.classList.contains('visible') ? 'rotate(180deg)' : '';
+  this.innerHTML = sec.classList.contains('visible')
+    ? `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg> Hide advanced options`
+    : `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg> Show more options`;
+});
+
+// Init
+initChips();
+initCategoryBar();
+renderTemplates();
+renderHistory();
+</script>
+</body>
+</html>
